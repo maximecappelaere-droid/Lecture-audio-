@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Robustesse — Olivier Hamant</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --ink: #1a1a18;
+    --paper: #f5f2ec;
+    --moss: #3d5a3e;
+    --moss-light: #5a7a5c;
+    --amber: #c8833a;
+    --amber-pale: #f0dfc4;
+    --rule: #ccc8c0;
+    --muted: #7a776f;
+    --red: #c0392b;
+    --red-pale: #fbeaea;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Sans', sans-serif;
+    padding: 24px 16px;
+  }
+
+  .card {
+    background: var(--paper);
+    border-radius: 4px;
+    max-width: 580px;
+    width: 100%;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--moss);
+    padding: 28px 32px 24px;
+    position: relative;
+  }
+  .label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 10px;
+  }
+  .title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    line-height: 1.2;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .title em { font-style: italic; color: #a8c9aa; }
+  .subtitle { font-size: 13px; color: rgba(255,255,255,0.55); font-weight: 300; }
+  .duration-badge {
+    position: absolute; top: 28px; right: 32px;
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.65);
+    font-size: 11px; font-weight: 500; letter-spacing: 0.05em;
+    padding: 4px 10px; border-radius: 20px;
+  }
+
+  /* ── API BANNER ── */
+  .api-banner {
+    background: #2a3d2b;
+    padding: 12px 32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .api-banner:hover { background: #344e36; }
+  .api-banner-text {
+    flex: 1;
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.4;
+  }
+  .api-banner-text strong { color: #a8c9aa; font-weight: 600; }
+  .api-banner-icon {
+    width: 28px; height: 28px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: rgba(255,255,255,0.5);
+    font-size: 16px;
+  }
+
+  /* ── API PANEL ── */
+  .api-panel {
+    background: #f0ede6;
+    border-bottom: 1px solid var(--rule);
+    padding: 16px 32px;
+    display: none;
+  }
+  .api-panel.open { display: block; }
+  .api-panel-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .api-row { display: flex; gap: 8px; align-items: center; }
+  .api-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    background: #fff;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .api-input:focus { border-color: var(--moss-light); }
+  .api-input::placeholder { color: #bbb; }
+  .api-save {
+    padding: 8px 16px;
+    background: var(--moss);
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .api-save:hover { background: var(--moss-light); }
+  .api-clear {
+    padding: 8px 10px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .api-clear:hover { border-color: var(--red); color: var(--red); }
+
+  .voice-row {
+    display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .voice-chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--rule);
+    background: #fff;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .voice-chip:hover { border-color: var(--moss-light); color: var(--moss); }
+  .voice-chip.active { background: var(--moss); color: #fff; border-color: var(--moss); }
+  .api-status-msg {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    min-height: 16px;
+  }
+  .api-status-msg.ok { color: var(--moss); }
+  .api-status-msg.err { color: var(--red); }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    padding: 10px 32px;
+    font-size: 12px;
+    font-weight: 500;
+    display: none;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-bar.visible { display: flex; }
+  .status-bar.loading { background: var(--amber-pale); color: var(--amber); }
+  .status-bar.error   { background: var(--red-pale);   color: var(--red);   }
+  .status-bar.ok      { background: #e8f0e8;            color: var(--moss);  }
+
+  .dot-spin {
+    width: 8px; height: 8px; border-radius: 50%;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── BODY ── */
+  .body { padding: 24px 32px 28px; }
+
+  /* Progress */
+  .progress-area { margin-bottom: 22px; }
+  .timestamps {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--muted);
+    margin-bottom: 8px; font-variant-numeric: tabular-nums;
+  }
+  .track {
+    width: 100%; height: 5px;
+    background: var(--rule); border-radius: 3px;
+    cursor: pointer; position: relative;
+  }
+  .fill {
+    height: 100%; background: var(--moss);
+    border-radius: 3px; width: 0%;
+    transition: width 0.25s linear;
+    pointer-events: none;
+  }
+  .thumb {
+    position: absolute; top: 50%; left: 0%;
+    transform: translate(-50%, -50%);
+    width: 14px; height: 14px;
+    background: var(--moss);
+    border-radius: 50%;
+    border: 2px solid var(--paper);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    transition: left 0.25s linear;
+    pointer-events: none;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex; align-items: center;
+    justify-content: center; gap: 16px;
+    margin-bottom: 22px;
+  }
+  .btn-secondary {
+    width: 42px; height: 42px; border-radius: 50%;
+    border: none; background: transparent;
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    color: var(--muted);
+    transition: color 0.15s, background 0.15s;
+  }
+  .btn-secondary:hover { color: var(--ink); background: rgba(0,0,0,0.06); }
+  .btn-secondary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn-play {
+    width: 62px; height: 62px; border-radius: 50%;
+    border: none; background: var(--moss);
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(61,90,62,0.4);
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-play:hover { background: var(--moss-light); transform: scale(1.04); box-shadow: 0 6px 22px rgba(61,90,62,0.5); }
+  .btn-play:active { transform: scale(0.97); }
+  .btn-play:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-play svg#iconPlay { margin-left: 3px; }
+
+  /* Meta row */
+  .meta-row {
+    display: flex; align-items: flex-start;
+    justify-content: space-between;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    gap: 16px;
+  }
+  .speed-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 7px;
+  }
+  .speed-buttons { display: flex; gap: 5px; }
+  .speed-btn {
+    padding: 4px 10px; border-radius: 20px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    font-size: 12px; font-family: 'DM Sans', sans-serif;
+    font-weight: 500; color: var(--muted);
+    cursor: pointer; transition: all 0.12s;
+  }
+  .speed-btn:hover { border-color: var(--moss-light); color: var(--moss); }
+  .speed-btn.active { background: var(--moss); color: #fff; border-color: var(--moss); }
+
+  /* Chapters */
+  .chapters-section { flex: 1; min-width: 0; }
+  .chapters-title {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 7px;
+  }
+  .chapter-list { list-style: none; }
+  .chapter-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 7px 0; border-bottom: 1px solid var(--rule);
+    cursor: pointer; transition: opacity 0.12s;
+  }
+  .chapter-item:last-child { border-bottom: none; }
+  .chapter-item:hover { opacity: 0.65; }
+  .chapter-item.active .ch-name { color: var(--moss); font-weight: 500; }
+  .chapter-item.active .ch-dot { background: var(--moss); }
+  .ch-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--rule); margin-top: 5px; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .ch-name { font-size: 12px; color: var(--ink); line-height: 1.4; flex: 1; }
+  .ch-time { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 2px; flex-shrink: 0; }
+
+  /* Current sentence display */
+  .sentence-display {
+    background: #eef3ee;
+    border-left: 3px solid var(--moss);
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    border-radius: 0 3px 3px 0;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.6;
+    min-height: 52px;
+    font-style: italic;
+    display: none;
+  }
+  .sentence-display.visible { display: block; }
+
+  @media (max-width: 460px) {
+    .header { padding: 22px 20px 18px; }
+    .body { padding: 18px 20px 22px; }
+    .title { font-size: 23px; }
+    .duration-badge { display: none; }
+    .api-banner, .api-panel, .status-bar { padding-left: 20px; padding-right: 20px; }
+    .meta-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="label">APM · Club Open Nord · 2025</div>
+    <div class="title">La Robustesse :<br><em>3e voie du vivant</em></div>
+    <div class="subtitle">Olivier Hamant — INRAE</div>
+    <div class="duration-badge">~15 min</div>
+  </div>
+
+  <!-- API BANNER -->
+  <div class="api-banner" id="apiBannerToggle">
+    <div class="api-banner-text">
+      <strong>ElevenLabs</strong> — Voix naturelle haute qualité<br>
+      <span id="bannerSubtitle">Saisir une clé API pour activer</span>
+    </div>
+    <div class="api-banner-icon" id="bannerChevron">›</div>
+  </div>
+
+  <!-- API PANEL -->
+  <div class="api-panel" id="apiPanel">
+    <div class="api-panel-title">Clé API ElevenLabs</div>
+    <div class="api-row">
+      <input type="password" id="apiKeyInput" class="api-input" placeholder="sk_…" autocomplete="off" spellcheck="false"/>
+      <button class="api-save" id="apiSaveBtn">Activer</button>
+      <button class="api-clear" id="apiClearBtn" title="Effacer la clé mémorisée">✕</button>
+    </div>
+    <div class="voice-row" id="voiceRow" style="display:none">
+      <div class="speed-label" style="width:100%;margin-bottom:4px">Voix disponibles</div>
+      <button class="voice-chip active" data-voice="pNInz6obpgDQGcFmaJgB" data-name="Adam">Adam</button>
+      <button class="voice-chip" data-voice="EXAVITQu4vr4xnSDxMaL" data-name="Bella">Bella</button>
+      <button class="voice-chip" data-voice="VR6AewLTigWG4xSOukaG" data-name="Arnold">Arnold</button>
+      <button class="voice-chip" data-voice="ErXwobaYiN019PkySvjV" data-name="Antoni">Antoni</button>
+      <button class="voice-chip" data-voice="MF3mGyEYCl7XYWbV9V6O" data-name="Elli">Elli</button>
+    </div>
+    <div id="apiStatusMsg" class="api-status-msg"></div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div id="statusBar" class="status-bar">
+    <div class="dot-spin" id="statusSpinner"></div>
+    <span id="statusText">Chargement…</span>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- Phrase en cours -->
+    <div class="sentence-display" id="sentenceDisplay"></div>
+
+    <!-- Progress -->
+    <div class="progress-area">
+      <div class="timestamps">
+        <span id="timeElapsed">0:00</span>
+        <span id="timeDuration">—</span>
+      </div>
+      <div class="track" id="trackBar">
+        <div class="fill" id="progressFill"></div>
+        <div class="thumb" id="progressThumb"></div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn-secondary" id="btnRewind" title="Reculer 30s">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/>
+          <text x="8.2" y="14.5" font-size="5.2" fill="currentColor" stroke="none" font-family="DM Sans,sans-serif" font-weight="700">30</text>
+        </svg>
+      </button>
+
+      <button class="btn-play" id="btnPlay">
+        <svg id="iconPlay" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+        <svg id="iconPause" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        <svg id="iconLoad" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:none;animation:spin 0.8s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      </button>
+
+      <button class="btn-secondary" id="btnForward" title="Avancer 30s">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-.49-3.5"/>
+          <text x="8.2" y="14.5" font-size="5.2" fill="currentColor" stroke="none" font-family="DM Sans,sans-serif" font-weight="700">30</text>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Meta -->
+    <div class="meta-row">
+      <div>
+        <div class="speed-label">Vitesse</div>
+        <div class="speed-buttons">
+          <button class="speed-btn" data-rate="0.9">0.9×</button>
+          <button class="speed-btn active" data-rate="1">1×</button>
+          <button class="speed-btn" data-rate="1.2">1.2×</button>
+          <button class="speed-btn" data-rate="1.5">1.5×</button>
+        </div>
+      </div>
+
+      <div class="chapters-section">
+        <div class="chapters-title">Chapitres</div>
+        <ul class="chapter-list" id="chapterList"></ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// SCRIPT — segmenté en phrases pour lecture fluide
+// ═══════════════════════════════════════════════════════════════════════════════
+const FULL_SCRIPT = `Aujourd'hui, nous allons parler de robustesse. Pas au sens comptable du terme, mais au sens biologique. Olivier Hamant, directeur de recherche à l'INRAE, est venu exposer devant le Club Open Nord une thèse qui dérange : notre culte de la performance est en train de nous détruire, et la solution n'est ni la croissance verte ni la sobriété forcée. C'est une troisième voie, celle que le vivant pratique depuis des milliards d'années. Pour la première fois en quatre milliards et demi d'années d'histoire de la Terre, une seule espèce laisse sa trace partout. Du plastique dans le sang de tous les animaux. Des satellites en obsolescence programmée toutes les trois à cinq années. Une techno-sphère désormais plus lourde que l'ensemble de la biomasse vivante sur Terre. Ce n'est pas une métaphore. C'est une mesure physique. La grande accélération commence en 1950. Consommation d'eau, d'engrais, de papier, tourisme, transports : tout s'emballe en même temps. Michel Serres l'avait dit avant tout le monde : nous dépendons des choses qui dépendent de nous. Ce que nous faisons nous revient en boomerang planétaire. Et Olivier Hamant formule une phrase qui fait son effet : notre performance fait une guerre à la vie. Passons maintenant aux quatre signaux faibles devenus forts. Ils se combinent et s'amplifient mutuellement. Premièrement, la pénurie de ressources naturelles. Deuxièmement, le dérèglement climatique. Hamant insiste sur le mot : pas réchauffement, mais dérèglement. Ce qui compte, ce n'est pas la moyenne qui monte, c'est l'écart type qui s'élargit. Les extrêmes, les canicules, les inondations, c'est ça qui casse les systèmes. Troisièmement, l'effondrement de la biodiversité : soixante-dix pour cent des vertébrés disparus, quatre-vingts pour cent du volume des insectes en soixante ans. Aucun précédent dans l'histoire du vivant. Quatrièmement, les pollutions globales omniprésentes. Le rapport Meadows, publié par le Club de Rome en 1972, l'avait modélisé : quand la courbe de population croise celle de la raréfaction des ressources, un basculement s'opère. Ce basculement, c'est maintenant. Nous sommes les générations futures que les années quatre-vingt imaginaient abstraitement. Signal d'alarme démographique que peu de gens ont intégré : nous sommes la première génération dont les enfants vivront moins longtemps que leurs parents. L'espérance de vie en bonne santé se contracte. La population mondiale va diminuer. Ce sont des ruptures statistiques sans précédent dans l'ère industrielle. Passons maintenant à l'impasse des deux voies classiques. Face à ce diagnostic, deux postures dominent le débat. La première : la croissance verte, le développement durable. Le problème, c'est l'effet rebond. Les écrans plats consomment moins par unité, mais nous en avons dix fois plus. Une éolienne, c'est du béton et de l'acier, ce n'est pas neutre si elle sert à alimenter la fast fashion. Les gains d'efficacité sont annulés par l'augmentation des usages. La deuxième voie : la sobriété, le ralentissement. Le problème, formule d'Hamant : la sobriété imposée génère de l'ébriété. Des avions moins gourmands produisent du sur-tourisme. La sobriété doit être un résultat, pas une injonction. Ce n'est pas une pulsion humaine naturellement joyeuse. Alors quelle est la troisième voie ? Comment vivre dans un monde fluctuant ? Ce qui nous amène au cœur du sujet : la robustesse comme troisième voie du vivant. Olivier Hamant tire de la biologie trois lois de viabilité qui contredisent nos intuitions managériales. Première loi : le vivant est circulaire sur le long terme. Un arbre évapore cinq cents litres d'eau par jour et les restitue à l'atmosphère. L'économie circulaire n'est pas une innovation humaine récente. C'est la loi du vivant depuis des milliards d'années. Nos systèmes économiques commencent à peine à s'en rapprocher. Deuxième loi : le vivant joue collectif. En milieu abondant, la compétition individuelle s'exprime. En milieu appauvri, la coopération du groupe s'impose. En forêt dense, retirer un arbre stimule la croissance des voisins. Dans un biotope pauvre, retirer un arbre les pénalise tous. Leçon de viabilité : l'abondance appelle la compétition. La pénurie appelle la coopération. Dans un monde de ressources contraintes, le modèle compétitif est biologiquement inadapté. Troisième loi, et c'est le cœur du propos : la robustesse se construit contre la performance. La performance, c'est l'efficacité combinée à l'efficience : atteindre l'objectif avec le moins de moyens possible. Or les êtres vivants sont robustes précisément parce qu'ils sont non performants. Ils acceptent l'inefficacité, l'hétérogénéité, l'erreur, l'incohérence. L'exemple du corps humain est saisissant. À trente-six virgule six degrés, notre corps n'est pas performant : il accepte toutes les bactéries, fonctionne en mode tolérance large. À quarante degrés, les enzymes sont ultra-performantes, mais le corps devient fragile et se détruit. Même logique pour un avion : il est robuste parce qu'il vole à cinquante pour cent de ses capacités. Jamais à plein régime. Conséquences directes pour le management. Augmenter la performance épuise et fragilise le système. Si l'on maintient un régime de haute performance, il faut des dates butoir impératives, sinon c'est le burn-out. Les gains de performance sont devenus contreproductifs à l'échelle planétaire. La phrase clé d'Olivier Hamant : le progrès du futur, c'est d'augmenter la robustesse, pas la performance. Passons maintenant aux outils concrets pour basculer. Premier réflexe : repenser nos mots. Bien nommer les choses, c'est habiter correctement le monde. Réchauffement climatique efface la violence du phénomène. Dérèglement le traduit mieux. Il ne faut pas décarboner l'économie mais décombustionner : arrêter de brûler, pas seulement compenser. Les dix-sept Objectifs de Développement Durable travaillent en silos. Ça ne marche pas. Il faut articuler les problèmes entre eux, construire des phrases, pas des listes. Deuxième réflexe : regarder les marges pour voir le monde qui vient. Les systèmes changent par les extrêmes, comme les nuées d'oiseaux qui bifurquent par les bords. L'agroécologie progresse chaque année depuis vingt ans en France. Les paysans les plus robustes diversifient : agroforesterie, agrotourisme. Rentables, stables, pas maximaux. L'économie de la fonctionnalité conçoit des objets de meilleure qualité parce qu'ils ont plusieurs propriétaires successifs. Troisième outil : le stress test comme boussole stratégique. Dans un monde performatif, les indicateurs de performance construisent le projet. Dans un monde fluctuant, le projet se construit depuis les fluctuations. Méthode en trois temps. Étape un : identifier la fluctuation majeure. Qu'est-ce qui pourrait se dérégler brutalement dans mon environnement : client, marché, réglementation, réputation ? Étape deux : identifier ce qui casse. Qu'est-ce qui, dans mon activité, serait le plus vulnérable ? Trésorerie, réputation, chaîne de valeur, compétences clés ? Étape trois : construire dès aujourd'hui les éléments de résistance. Traçabilité, diversification, coopérations de filière, alternatives déjà documentées. Quatrième outil : l'audit interne de robustesse. Question centrale pour chaque dirigeant : quelles sont les contre-performances de mon entreprise, et en quoi contribuent-elles à sa robustesse ? Des délais de préavis plus longs dans les négociations peuvent traduire une relation client plus profonde. Une diversification apparemment dispersée peut protéger en cas de retournement sectoriel. Ce qui ressemble à une faiblesse peut être une armure. Pour conclure, voici ce que vous pouvez faire dès cette semaine. Réaliser le stress test sur votre activité principale en identifiant la fluctuation qui vous ferait le plus de mal. Lister vos trois principales contre-performances et demander si elles vous protègent ou vous exposent. Consulter larobustesse point org pour des ressources et des outils communautaires. La robustesse n'est pas la résignation. C'est l'intelligence du vivant appliquée à nos organisations. Et dans un monde qui fluctue, c'est probablement le seul avantage concurrentiel durable qui reste.`;
+
+// Découpe en phrases (sur . ! ? suivi d'espace ou fin)
+function splitSentences(text) {
+  const raw = text.match(/[^.!?]+[.!?]+(\s|$)/g) || [text];
+  return raw.map(s => s.trim()).filter(s => s.length > 2);
+}
+
+const SENTENCES = splitSentences(FULL_SCRIPT);
+const TOTAL_SENTENCES = SENTENCES.length;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHAPITRES (index de phrase)
+// ═══════════════════════════════════════════════════════════════════════════════
+const CHAPTERS = [
+  { name: "Introduction",              sentenceIdx: 0 },
+  { name: "Les quatre signaux",        sentenceIdx: 14 },
+  { name: "Deux voies classiques",     sentenceIdx: 26 },
+  { name: "Les 3 lois du vivant",      sentenceIdx: 35 },
+  { name: "Outils & stress test",      sentenceIdx: 53 },
+  { name: "Audit de robustesse",       sentenceIdx: 66 },
+  { name: "Conclusion actionnable",    sentenceIdx: 72 },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+let elevenKey   = '';
+let elevenVoice = 'pNInz6obpgDQGcFmaJgB'; // Adam par défaut
+let useEleven   = false;
+let currentRate = 1;
+
+let isPlaying   = false;
+let currentIdx  = 0;         // phrase en cours
+let audioQueue  = [];        // HTMLAudioElement préchargé (ElevenLabs)
+let currentAudio= null;
+let progressTimer = null;
+let sentenceStartTime = null;
+let sentenceDurations = [];  // durée estimée de chaque phrase (secondes)
+
+// Durée estimée totale : ~140 mots/min à ×1
+const WPM_BASE = 140;
+function estimateDuration(sentence, rate) {
+  const words = sentence.split(/\s+/).length;
+  return (words / WPM_BASE) * 60 / rate;
+}
+
+// Durée totale estimée
+function totalDuration(rate) {
+  return SENTENCES.reduce((acc, s) => acc + estimateDuration(s, rate), 0);
+}
+
+// Temps cumulé jusqu'à une phrase
+function timeUpTo(idx, rate) {
+  let t = 0;
+  for (let i = 0; i < idx; i++) t += estimateDuration(SENTENCES[i], rate);
+  return t;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOM refs
+// ═══════════════════════════════════════════════════════════════════════════════
+const btnPlay       = document.getElementById('btnPlay');
+const iconPlay      = document.getElementById('iconPlay');
+const iconPause     = document.getElementById('iconPause');
+const iconLoad      = document.getElementById('iconLoad');
+const btnRewind     = document.getElementById('btnRewind');
+const btnForward    = document.getElementById('btnForward');
+const progressFill  = document.getElementById('progressFill');
+const progressThumb = document.getElementById('progressThumb');
+const timeElapsed   = document.getElementById('timeElapsed');
+const timeDuration  = document.getElementById('timeDuration');
+const trackBar      = document.getElementById('trackBar');
+const statusBar     = document.getElementById('statusBar');
+const statusText    = document.getElementById('statusText');
+const statusSpinner = document.getElementById('statusSpinner');
+const chapterList   = document.getElementById('chapterList');
+const sentenceDisplay = document.getElementById('sentenceDisplay');
+const apiBannerToggle = document.getElementById('apiBannerToggle');
+const apiPanel      = document.getElementById('apiPanel');
+const apiKeyInput   = document.getElementById('apiKeyInput');
+const apiSaveBtn    = document.getElementById('apiSaveBtn');
+const voiceRow      = document.getElementById('voiceRow');
+const apiStatusMsg  = document.getElementById('apiStatusMsg');
+const bannerSubtitle= document.getElementById('bannerSubtitle');
+const bannerChevron = document.getElementById('bannerChevron');
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
+function fmt(sec) {
+  const s = Math.floor(Math.max(0, sec));
+  const m = Math.floor(s / 60);
+  return `${m}:${(s % 60).toString().padStart(2,'0')}`;
+}
+
+function setStatus(msg, type = 'loading', visible = true) {
+  statusBar.className = 'status-bar' + (visible ? ` visible ${type}` : '');
+  statusText.textContent = msg;
+  statusSpinner.style.display = type === 'loading' ? 'block' : 'none';
+}
+
+function hideStatus() { statusBar.className = 'status-bar'; }
+
+function setPlayState(state) {
+  // state: 'play' | 'pause' | 'loading' | 'stop'
+  iconPlay.style.display  = state === 'play'    ? 'block' : 'none';
+  iconPause.style.display = state === 'pause'   ? 'block' : 'none';
+  iconLoad.style.display  = state === 'loading' ? 'block' : 'none';
+}
+
+function updateProgressUI(elapsedSec) {
+  const dur = totalDuration(currentRate);
+  const pct = Math.min((elapsedSec / dur) * 100, 100);
+  progressFill.style.width = pct + '%';
+  progressThumb.style.left = pct + '%';
+  timeElapsed.textContent = fmt(elapsedSec);
+  timeDuration.textContent = fmt(dur);
+}
+
+function updateChapters(idx) {
+  let active = 0;
+  for (let i = 0; i < CHAPTERS.length; i++) {
+    if (idx >= CHAPTERS[i].sentenceIdx) active = i;
+  }
+  chapterList.querySelectorAll('.chapter-item').forEach((el, i) =>
+    el.classList.toggle('active', i === active)
+  );
+}
+
+function showSentence(idx) {
+  const s = SENTENCES[idx] || '';
+  sentenceDisplay.textContent = s;
+  sentenceDisplay.classList.add('visible');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PROGRESS TIMER
+// ═══════════════════════════════════════════════════════════════════════════════
+function startProgressTimer() {
+  clearInterval(progressTimer);
+  progressTimer = setInterval(() => {
+    if (!sentenceStartTime) return;
+    const elapsed = timeUpTo(currentIdx, currentRate) + (Date.now() - sentenceStartTime) / 1000;
+    updateProgressUI(elapsed);
+    updateChapters(currentIdx);
+  }, 200);
+}
+
+function stopProgressTimer() { clearInterval(progressTimer); }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BROWSER TTS — rendu phrase par phrase pour fluidité maximale
+// ═══════════════════════════════════════════════════════════════════════════════
+function getBestFrenchVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  // Priorité : voix de haute qualité connues
+  const preferred = ['Thomas', 'Amélie', 'Daniel', 'Marie'];
+  for (const name of preferred) {
+    const v = voices.find(v => v.name.includes(name) && v.lang.startsWith('fr'));
+    if (v) return v;
+  }
+  // Fallback : première voix fr non-compact
+  const fr = voices.find(v => v.lang.startsWith('fr') && !v.name.toLowerCase().includes('compact'));
+  if (fr) return fr;
+  // Dernier recours : n'importe quelle voix fr
+  return voices.find(v => v.lang.startsWith('fr')) || null;
+}
+
+let browserPaused = false;
+let pendingResumeIdx = null;
+
+function speakSentenceBrowser(idx) {
+  if (idx >= TOTAL_SENTENCES) { onPlaybackEnd(); return; }
+  currentIdx = idx;
+  showSentence(idx);
+  sentenceStartTime = Date.now();
+
+  const utt = new SpeechSynthesisUtterance(SENTENCES[idx]);
+  utt.lang  = 'fr-FR';
+  utt.rate  = currentRate;
+  utt.pitch = 1.0;
+  const voice = getBestFrenchVoice();
+  if (voice) utt.voice = voice;
+
+  utt.onend = () => {
+    if (!isPlaying) return;
+    speakSentenceBrowser(idx + 1);
+  };
+  utt.onerror = (e) => {
+    if (e.error === 'interrupted' || e.error === 'canceled') return;
+    console.warn('TTS error:', e.error);
+    if (isPlaying) speakSentenceBrowser(idx + 1);
+  };
+
+  window.speechSynthesis.speak(utt);
+}
+
+function pauseBrowser() {
+  window.speechSynthesis.cancel();
+  browserPaused = true;
+}
+
+function resumeBrowser() {
+  browserPaused = false;
+  speakSentenceBrowser(currentIdx);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ELEVENLABS TTS
+// ═══════════════════════════════════════════════════════════════════════════════
+let elevenPaused = false;
+
+async function fetchElevenSentence(text) {
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${elevenVoice}/stream`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'xi-api-key': elevenKey,
+      'Content-Type': 'application/json',
+      'Accept': 'audio/mpeg',
+    },
+    body: JSON.stringify({
+      text: text,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: { stability: 0.55, similarity_boost: 0.80, style: 0.15, use_speaker_boost: true }
+    })
+  });
+  if (!res.ok) throw new Error(`ElevenLabs ${res.status}`);
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
+
+async function speakSentenceEleven(idx) {
+  if (idx >= TOTAL_SENTENCES) { onPlaybackEnd(); return; }
+  if (!isPlaying) return;
+
+  currentIdx = idx;
+  showSentence(idx);
+
+  // Pré-charger la suivante en parallèle
+  let nextUrlPromise = null;
+  if (idx + 1 < TOTAL_SENTENCES) {
+    nextUrlPromise = fetchElevenSentence(SENTENCES[idx + 1]).catch(() => null);
+  }
+
+  try {
+    // Récupérer l'URL de la phrase courante (déjà préchargée si disponible)
+    const url = audioQueue[idx] || await fetchElevenSentence(SENTENCES[idx]);
+    audioQueue[idx] = url;
+
+    if (!isPlaying) return;
+
+    const audio = new Audio(url);
+    audio.playbackRate = currentRate;
+    currentAudio = audio;
+    sentenceStartTime = Date.now();
+
+    await new Promise((resolve, reject) => {
+      audio.onended = resolve;
+      audio.onerror = reject;
+      audio.play().catch(reject);
+    });
+
+    // Stocker le préchargement
+    if (nextUrlPromise) {
+      const nextUrl = await nextUrlPromise;
+      if (nextUrl) audioQueue[idx + 1] = nextUrl;
+    }
+
+    if (isPlaying) speakSentenceEleven(idx + 1);
+
+  } catch (e) {
+    if (!isPlaying) return;
+    console.warn('ElevenLabs error, fallback browser TTS:', e);
+    setStatus('ElevenLabs inaccessible — bascule sur voix navigateur', 'error');
+    setTimeout(hideStatus, 3000);
+    useEleven = false;
+    speakSentenceBrowser(idx);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONTRÔLE PRINCIPAL
+// ═══════════════════════════════════════════════════════════════════════════════
+function onPlaybackEnd() {
+  isPlaying = false;
+  stopProgressTimer();
+  setPlayState('play');
+  currentIdx = 0;
+  updateProgressUI(totalDuration(currentRate));
+  sentenceDisplay.classList.remove('visible');
+  hideStatus();
+}
+
+function stopAll() {
+  isPlaying = false;
+  window.speechSynthesis.cancel();
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  stopProgressTimer();
+}
+
+function play(fromIdx = null) {
+  if (fromIdx !== null) currentIdx = Math.max(0, Math.min(fromIdx, TOTAL_SENTENCES - 1));
+  isPlaying = true;
+  setPlayState('pause');
+  startProgressTimer();
+  hideStatus();
+
+  if (useEleven) {
+    speakSentenceEleven(currentIdx);
+  } else {
+    speakSentenceBrowser(currentIdx);
+  }
+}
+
+function pause() {
+  isPlaying = false;
+  setPlayState('play');
+  stopProgressTimer();
+  const elapsed = timeUpTo(currentIdx, currentRate);
+  updateProgressUI(elapsed);
+
+  if (useEleven) {
+    if (currentAudio) currentAudio.pause();
+  } else {
+    window.speechSynthesis.cancel();
+  }
+}
+
+function seekToSentence(idx) {
+  const wasPlaying = isPlaying;
+  stopAll();
+  currentIdx = Math.max(0, Math.min(idx, TOTAL_SENTENCES - 1));
+  const elapsed = timeUpTo(currentIdx, currentRate);
+  updateProgressUI(elapsed);
+  updateChapters(currentIdx);
+  if (wasPlaying) play(currentIdx);
+}
+
+// Convertir un temps (secondes) en index de phrase
+function timeToSentenceIdx(sec) {
+  let t = 0;
+  for (let i = 0; i < TOTAL_SENTENCES; i++) {
+    const d = estimateDuration(SENTENCES[i], currentRate);
+    if (t + d > sec) return i;
+    t += d;
+  }
+  return TOTAL_SENTENCES - 1;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════════════════════════════════════
+btnPlay.addEventListener('click', () => {
+  if (isPlaying) pause();
+  else play();
+});
+
+btnRewind.addEventListener('click', () => {
+  const cur = timeUpTo(currentIdx, currentRate);
+  const target = Math.max(0, cur - 30);
+  seekToSentence(timeToSentenceIdx(target));
+});
+
+btnForward.addEventListener('click', () => {
+  const cur = timeUpTo(currentIdx, currentRate);
+  const target = Math.min(totalDuration(currentRate), cur + 30);
+  seekToSentence(timeToSentenceIdx(target));
+});
+
+trackBar.addEventListener('click', (e) => {
+  const rect = trackBar.getBoundingClientRect();
+  const frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const targetSec = frac * totalDuration(currentRate);
+  seekToSentence(timeToSentenceIdx(targetSec));
+});
+
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const wasPlaying = isPlaying;
+    const savedIdx = currentIdx;
+    stopAll();
+    currentRate = parseFloat(btn.dataset.rate);
+    updateProgressUI(timeUpTo(savedIdx, currentRate));
+    renderChapters();
+    if (wasPlaying) play(savedIdx);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// API PANEL
+// ═══════════════════════════════════════════════════════════════════════════════
+apiBannerToggle.addEventListener('click', () => {
+  const open = apiPanel.classList.toggle('open');
+  bannerChevron.textContent = open ? '⌃' : '›';
+});
+
+apiSaveBtn.addEventListener('click', async () => {
+  const key = apiKeyInput.value.trim();
+  if (!key) { apiStatusMsg.textContent = 'Clé vide.'; apiStatusMsg.className = 'api-status-msg err'; return; }
+
+  apiStatusMsg.textContent = 'Vérification…';
+  apiStatusMsg.className = 'api-status-msg';
+
+  try {
+    // Test rapide avec un texte court
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${elevenVoice}/stream`, {
+      method: 'POST',
+      headers: { 'xi-api-key': key, 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
+      body: JSON.stringify({ text: 'Test.', model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.5, similarity_boost: 0.8 } })
+    });
+    if (!res.ok) throw new Error(res.status);
+
+    elevenKey = key;
+    useEleven = true;
+    audioQueue = [];
+    // Mémorisation dans le navigateur — permanente jusqu'à suppression manuelle
+    try { localStorage.setItem('el_api_key', key); } catch(e) {}
+    apiStatusMsg.textContent = '✓ ElevenLabs activé — clé mémorisée sur cet appareil';
+    apiStatusMsg.className = 'api-status-msg ok';
+    bannerSubtitle.textContent = '✓ Voix naturelle active';
+    voiceRow.style.display = 'flex';
+    setStatus('ElevenLabs activé', 'ok');
+    setTimeout(hideStatus, 2500);
+  } catch (e) {
+    apiStatusMsg.textContent = `Clé invalide ou erreur réseau (${e.message})`;
+    apiStatusMsg.className = 'api-status-msg err';
+  }
+});
+
+// Effacer la clé mémorisée
+document.getElementById('apiClearBtn').addEventListener('click', () => {
+  try { localStorage.removeItem('el_api_key'); localStorage.removeItem('el_voice_id'); } catch(e) {}
+  elevenKey = ''; useEleven = false; audioQueue = [];
+  apiKeyInput.value = '';
+  bannerSubtitle.textContent = 'Saisir une clé API pour activer';
+  voiceRow.style.display = 'none';
+  apiStatusMsg.textContent = 'Clé supprimée. Voix navigateur réactivée.';
+  apiStatusMsg.className = 'api-status-msg';
+  if (isPlaying) { stopAll(); play(currentIdx); }
+});
+
+// Sélection de voix ElevenLabs
+document.querySelectorAll('.voice-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.voice-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    elevenVoice = chip.dataset.voice;
+    try { localStorage.setItem('el_voice_id', elevenVoice); } catch(e) {}
+    audioQueue = []; // vider le cache
+    if (isPlaying) { stopAll(); play(currentIdx); }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHAPITRES — RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+function renderChapters() {
+  chapterList.innerHTML = '';
+  CHAPTERS.forEach((ch, i) => {
+    const li = document.createElement('li');
+    li.className = 'chapter-item' + (i === 0 ? ' active' : '');
+    const t = timeUpTo(ch.sentenceIdx, currentRate);
+    li.innerHTML = `<div class="ch-dot"></div><span class="ch-name">${ch.name}</span><span class="ch-time">${fmt(t)}</span>`;
+    li.addEventListener('click', () => seekToSentence(ch.sentenceIdx));
+    chapterList.appendChild(li);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════════
+function activateElevenSilently(key) {
+  elevenKey = key;
+  useEleven = true;
+  audioQueue = [];
+  apiKeyInput.value = key;
+  bannerSubtitle.textContent = '✓ Voix naturelle active (clé mémorisée)';
+  voiceRow.style.display = 'flex';
+  apiStatusMsg.textContent = '✓ Clé chargée automatiquement depuis cet appareil';
+  apiStatusMsg.className = 'api-status-msg ok';
+}
+
+function init() {
+  renderChapters();
+  updateProgressUI(0);
+  timeDuration.textContent = fmt(totalDuration(1));
+  setPlayState('play');
+
+  // Charger la clé ElevenLabs mémorisée si elle existe
+  try {
+    const savedKey   = localStorage.getItem('el_api_key');
+    const savedVoice = localStorage.getItem('el_voice_id');
+    if (savedVoice) {
+      elevenVoice = savedVoice;
+      document.querySelectorAll('.voice-chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.voice === savedVoice);
+      });
+    }
+    if (savedKey) activateElevenSilently(savedKey);
+  } catch(e) {}
+
+  // Précharger les voix navigateur
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.getVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+  }
+}
+
+init();
+</script>
+</body>
+</html>
